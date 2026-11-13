@@ -34,7 +34,7 @@ WORDS = [
     ("bank", r"\bbank|lombank|\bcash\b|\batm\b|credit union"),
     ("hotel", r"hotel|hostel|resort|\binn\b|motel|beach house|suites"),
     ("food", r"restaurant|cafe|café|diner|grill|\bbar\b|pizza|burger|kitchen|bakery|foods|taco|checkers|oar house|cuban|coffee|bean\b|steak|seafood|bbq"),
-    ("night", r"night ?club|strip|lounge|\bclub\b(?!.*(yacht|golf|fishing|outboard|tennis|racquet|country))"),
+    ("night", r"^(?!.*(yacht|golf|fishing|outboard|tennis|racquet|country|links)).*(night ?club|strip club|lounge|\bclub\b)"),
     ("shop", r"store|\bshop|market|\bmall\b|emporium|pawn|pharmacy|clothing|boutique|burberry|outlet|liquor|tattoo|barber|salon|laundr"),
     ("transport", r"marina|\bpier\b|boat|\bdock|seaplane|airport|runway|hangar|station|train|\bbus\b|terminal|ramp|yacht|ferry|metro"),
     ("roads", r"\bturn\b|bridge|tunnel|interchange|overpass|causeway|cswy|highway|crossing|\bgate\b"),
