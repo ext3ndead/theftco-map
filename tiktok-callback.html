@@ -14,8 +14,23 @@ button{height:44px;padding:0 18px;border:0;border-radius:12px;background:#FF4FA3
 <code id="code">—</code>
 <button id="b" type="button">Copy code</button>
 </div>
+<div class="c" id="start" style="display:none">
+<h1>Connect TikTok</h1>
+<p>Paste your app's <b>Client Key</b> (TikTok for Developers → your app → Credentials) and press Connect.</p>
+<label for="ck" style="display:block;margin:8px 0 6px">Client Key</label>
+<input id="ck" style="width:100%;box-sizing:border-box;height:44px;border-radius:12px;border:0;padding:0 12px;font-size:15px">
+<p></p><button id="go" type="button">Connect TikTok</button>
+</div>
 <script>
 const q = new URLSearchParams(location.search), code = q.get('code'), err = q.get('error');
+if (!code && !err) {  // no callback yet: show the "connect" form instead
+  document.querySelector('.c').style.display = 'none'; document.getElementById('start').style.display = 'block';
+  document.getElementById('go').onclick = () => {
+    const ck = document.getElementById('ck').value.trim(); if (!ck) return;
+    location.href = 'https://www.tiktok.com/v2/auth/authorize/?' + new URLSearchParams({ client_key: ck, response_type: 'code',
+      scope: 'user.info.basic,video.publish,video.upload', redirect_uri: location.origin + location.pathname, state: 'theftco' });
+  };
+}
 document.getElementById('code').textContent = code || ('No code. ' + (err ? err + ': ' + (q.get('error_description') || '') : ''));
 document.getElementById('b').onclick = () => navigator.clipboard.writeText(code || '').then(() => document.getElementById('b').textContent = 'Copied');
 </script></body></html>
