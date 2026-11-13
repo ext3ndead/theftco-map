@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Theft &amp; Co — GTA 6 Map</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Yellowtail&display=swap">
+<style>
+:root{
+  --ink:#140a26;--pink:#FF4FA3;--peach:#FFB48A;--violet:#B44BE0;
+  --neu:rgba(38,20,62,.62);--neu-hi:rgba(255,255,255,.09);--neu-lo:rgba(0,0,0,.42);
+  --line:rgba(255,255,255,.12);--muted:rgba(255,255,255,.62);
+  --sh:inset 1px 1px 0 var(--neu-hi),inset -1px -1px 0 rgba(0,0,0,.25),6px 8px 18px var(--neu-lo),-3px -3px 10px rgba(255,255,255,.03);
+  --sh-in:inset 3px 3px 8px rgba(0,0,0,.45),inset -2px -2px 6px rgba(255,255,255,.06);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;color:#fff;font-family:Montserrat,system-ui,sans-serif;overflow:hidden;
+  background:linear-gradient(180deg,#24123f 0%,#3b1d5c 38%,#7a2f78 70%,#d0578a 92%,#e98aa2 100%)}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:64px 64px}
+#map{position:fixed;inset:0;background:transparent}
+.leaflet-container{background:transparent;font-family:inherit}
+.leaflet-control-attribution{background:rgba(20,10,38,.55)!important;color:var(--muted)!important;font-size:9px!important;border-radius:8px 0 0 0;margin-bottom:calc(env(safe-area-inset-bottom) + 92px)!important}
+.leaflet-control-attribution a{color:var(--peach)!important}
+.neu{background:var(--neu);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--sh);border:1px solid var(--line)}
+button{font-family:inherit;cursor:pointer}
+/* top logo pill */
+#brand{position:fixed;z-index:1000;left:50%;top:calc(env(safe-area-inset-top) + 10px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:6px 8px 6px 16px;border-radius:16px}
+#brand .logo{font-family:Yellowtail,cursive;font-size:26px;line-height:1;text-shadow:0 0 14px rgba(255,79,163,.75)}
+#brand .tag{padding:5px 9px;border-radius:10px;font:900 12px Montserrat;letter-spacing:1px;background:linear-gradient(135deg,#FF4FA3,#8C3BE0);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
+/* left toolbar */
+#tools{position:fixed;z-index:1000;left:10px;top:calc(env(safe-area-inset-top) + 70px);display:flex;flex-direction:column;gap:6px;padding:6px;border-radius:16px}
+.tb{width:40px;height:40px;border-radius:12px;border:0;background:transparent;color:#fff;display:flex;align-items:center;justify-content:center}
+.tb:active{box-shadow:var(--sh-in)}
+.tb.on{background:var(--pink);box-shadow:0 0 14px rgba(255,79,163,.6)}
+.sep{height:1px;margin:2px 6px;background:var(--line)}
+/* coords pill */
+#coords{position:fixed;z-index:999;left:10px;bottom:calc(env(safe-area-inset-bottom) + 96px);display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:14px;font:700 12px Montserrat;color:var(--muted)}
+#coords .ic{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08)}
+#style{position:fixed;z-index:999;right:10px;bottom:calc(env(safe-area-inset-bottom) + 96px);display:flex;gap:4px;padding:4px;border-radius:14px}
+#style button{width:40px;height:32px;border-radius:10px;border:0;background:transparent;color:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center}
+#style button.on{background:var(--pink);color:#fff;box-shadow:0 0 12px rgba(255,79,163,.6)}
+/* bottom nav */
+#nav{position:fixed;z-index:1002;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);display:flex;justify-content:space-around;align-items:center;height:70px;border-radius:24px;padding:0 6px}
+.nb{position:relative;width:54px;height:54px;border-radius:50%;border:0;background:transparent;color:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center}
+.nb.on{background:var(--pink);color:#fff;box-shadow:0 0 0 4px rgba(255,79,163,.18),0 6px 18px rgba(255,79,163,.55)}
+.nb .cnt{position:absolute;top:4px;right:2px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#FFD23F;color:var(--ink);font:900 10px/18px Montserrat}
+/* clusters & pins (State-of-Leonida style) */
+.cl{display:flex;align-items:center;justify-content:center;border-radius:50%;color:#fff;font:900 14px Montserrat;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+.pin{width:26px;height:26px;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.pin svg{width:14px;height:14px}
+.pin.sel{transform:scale(1.35);box-shadow:0 0 0 4px rgba(255,79,163,.55),0 2px 6px rgba(0,0,0,.5)}
+/* panels (categories / search / saved) */
+.panel{position:fixed;z-index:1001;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 90px);max-height:62vh;display:flex;flex-direction:column;border-radius:24px;padding:14px;transform:translateY(20px);opacity:0;pointer-events:none;transition:.22s cubic-bezier(.2,.9,.3,1)}
+.panel.open{transform:none;opacity:1;pointer-events:auto}
+.ph-title{display:flex;justify-content:space-between;align-items:center;font:900 15px Montserrat;letter-spacing:2px;margin:2px 4px 12px}
+.ph-title small{font:700 12px Montserrat;letter-spacing:0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;overflow:auto;padding:2px}
+.cat{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px 10px;border-radius:16px;border:0;color:#fff;background:rgba(255,255,255,.04);box-shadow:var(--sh);font:800 11px Montserrat}
+.cat .ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.cat .n{color:var(--muted);font-weight:700;font-size:10px}
+.cat.on{box-shadow:var(--sh-in);background:rgba(255,79,163,.16);outline:2px solid var(--pink)}
+.row2{display:flex;gap:8px;margin-top:12px}
+.pill{flex:1;height:42px;border-radius:14px;border:0;color:#fff;background:rgba(255,255,255,.05);box-shadow:var(--sh);font:800 12px Montserrat;display:flex;align-items:center;justify-content:center;gap:8px}
+.pill.on{background:var(--pink);box-shadow:0 0 14px rgba(255,79,163,.5)}
+.field{display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border-radius:14px;box-shadow:var(--sh-in);background:rgba(0,0,0,.18)}
+.field input{flex:1;min-width:0;border:0;outline:0;background:none;color:#fff;font:700 15px Montserrat}
+.field input::placeholder{color:var(--muted)}
+.list{overflow:auto;margin-top:10px}
+.li{display:flex;width:100%;gap:12px;align-items:center;text-align:left;padding:10px 6px;border:0;border-bottom:1px solid var(--line);background:none;color:#fff;font:700 14px Montserrat}
+.li .d{width:12px;height:12px;border-radius:6px;flex:none;border:2px solid #fff}
+.li small{display:block;color:var(--muted);font-weight:600;font-size:12px;margin-top:2px}
+.empty{padding:22px 6px;color:var(--muted);font:700 13px Montserrat;text-align:center}
+/* place sheet */
+#sheet{position:fixed;z-index:1003;left:10px;right:10px;bottom:calc(env(safe-area-inset-bottom) + 10px);border-radius:26px;overflow:hidden;transform:translateY(115%);transition:transform .28s cubic-bezier(.2,.9,.3,1)}
+#sheet.open{transform:none}
+.photo{position:relative;height:180px;margin:8px 8px 0;border-radius:18px;overflow:hidden;background:linear-gradient(135deg,#3a2a52,#1d1430);box-shadow:var(--sh-in)}
+.photo img{width:100%;height:100%;object-fit:cover;display:block}
+.photo .none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font:800 12px Montserrat;letter-spacing:3px}
+.seg{position:absolute;left:10px;bottom:10px;display:flex;padding:3px;border-radius:12px;background:rgba(20,10,38,.7)}
+.seg button{height:26px;padding:0 10px;border-radius:9px;border:0;background:none;color:#fff;font:800 10px Montserrat;letter-spacing:1px}
+.seg button.on{background:var(--pink)}
+.x{position:absolute;right:10px;top:10px;width:34px;height:34px;border-radius:12px;border:0;background:rgba(20,10,38,.7);color:#fff;display:flex;align-items:center;justify-content:center}
+.sb{padding:14px 16px 16px}
+.kind{display:inline-flex;align-items:center;gap:6px;font:800 11px Montserrat;letter-spacing:2px;color:var(--peach)}
+.ttl{margin:6px 0 2px;font:900 21px/1.15 Montserrat}
+.area{color:var(--muted);font-weight:700;font-size:14px}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.badge{padding:5px 9px;border-radius:9px;background:rgba(255,255,255,.07);box-shadow:var(--sh);font:800 10px Montserrat;letter-spacing:.8px}
+.badge.g{color:#7CF0A0}.badge.y{color:#FFC861}
+.rl{margin-top:10px;font-size:12px;color:var(--muted);font-weight:600;line-height:1.4}
+.acts{display:flex;gap:8px;margin-top:14px}
+.acts button{flex:1;height:46px;border-radius:15px;border:0;font:800 14px Montserrat;color:#fff;background:rgba(255,255,255,.05);box-shadow:var(--sh);display:flex;align-items:center;justify-content:center;gap:8px}
+.acts button.pri{background:linear-gradient(135deg,#FF4FA3,#8C3BE0);box-shadow:0 6px 18px rgba(255,79,163,.45),inset 0 1px 0 rgba(255,255,255,.3)}
+#loading{position:fixed;inset:0;z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:linear-gradient(180deg,#24123f,#3b1d5c 50%,#7a2f78);transition:opacity .4s}
+#loading .logo{font-family:Yellowtail,cursive;font-size:60px;text-shadow:0 0 18px rgba(255,79,163,.8)}
+#loading .track{width:200px;height:8px;border-radius:4px;box-shadow:var(--sh-in);overflow:hidden}
+#loading .track i{display:block;height:100%;width:40%;border-radius:4px;background:linear-gradient(90deg,#FF4FA3,#FFB48A);animation:ld 1s infinite ease-in-out}
+@keyframes ld{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+</style>
+</head>
+<body>
+<div id="loading"><div class="logo">Theft &amp; Co</div><div style="font:800 13px Montserrat;letter-spacing:4px">GTA VI · LEONIDA MAP</div><div class="track"><i></i></div></div>
+<div id="map"></div>
+
+<div id="brand" class="neu"><img src="logo.jpg" alt="" style="width:30px;height:30px;border-radius:9px"><span class="logo">Theft &amp; Co</span><span class="tag">GTA VI MAP</span></div>
+<div id="style" class="neu" role="group" aria-label="Map style"><button class="on" data-t="yanis,17" aria-label="Detailed map"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button><button data-t="dupzor,51" aria-label="Classic map"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 14l5-4 4 3 3-2 4 3"/></svg></button></div>
+
+<div id="tools" class="neu">
+  <button class="tb" id="zin" aria-label="Zoom in"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button class="tb" id="zout" aria-label="Zoom out"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+  <div class="sep"></div>
+  <button class="tb" id="home" aria-label="Show all of Leonida"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  <button class="tb" id="enter" aria-label="Only places you can enter"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg></button>
+</div>
+
+<div id="coords" class="neu"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></span><span id="xy">X: 0 · Y: 0</span></div>
+
+<!-- panels -->
+<div class="panel neu" id="pCats">
+  <div class="ph-title">CATEGORIES <small id="shown"></small></div>
+  <div class="grid" id="cats"></div>
+  <div class="row2"><button class="pill" id="pAll">Show all</button><button class="pill" id="pEnter">Enterable only</button></div>
+</div>
+<div class="panel neu" id="pSearch">
+  <div class="field"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Shops, streets, districts…" autocomplete="off" aria-label="Search the map"></div>
+  <div class="list" id="results"><div class="empty">Type at least 2 letters</div></div>
+</div>
+<div class="panel neu" id="pSaved">
+  <div class="ph-title">SAVED PLACES <small id="savedN"></small></div>
+  <div class="list" id="savedList"></div>
+</div>
+
+<nav id="nav" class="neu">
+  <button class="nb on" data-p="" aria-label="Map"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg></button>
+  <button class="nb" data-p="pCats" aria-label="Categories"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg></button>
+  <button class="nb" data-p="pSearch" aria-label="Search"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+  <button class="nb" data-p="pSaved" aria-label="Saved places"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg><span class="cnt" id="navSaved" style="display:none"></span></button>
+</nav>
+
+<div id="sheet" class="neu">
+  <div class="photo"><img id="sImg" alt=""><div class="none" id="sNone">NO PHOTO YET</div>
+    <div class="seg"><button id="tIg" class="on">IN-GAME</button><button id="tRl">REAL LIFE</button></div>
+    <button class="x" id="sX" aria-label="Close"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="sb">
+    <div class="kind" id="sKind"></div>
+    <div class="ttl" id="sTitle"></div>
+    <div class="area" id="sArea"></div>
+    <div class="badges" id="sBadges"></div>
+    <div class="rl" id="sRl"></div>
+    <div class="acts">
+      <button id="sSave"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg><span>Save</span></button>
+      <button id="sShare" class="pri"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L3 10.5l7 2.5 2.5 7L21 3z"/></svg>Share</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script src="data.js"></script>
+<script>
+const tg = window.Telegram && Telegram.WebApp; try { tg.ready(); tg.expand(); tg.setHeaderColor('#24123f'); tg.setBackgroundColor('#24123f'); } catch (e) {}
+const BOT = 'theftncobot';
+const TILES = 'https://cdn.jsdelivr.net/gh/rolux/gtadb.org@main/maps/tiles/6';
+const PHOTOS = 'https://raw.githubusercontent.com/rolux/gtadb.org/main/map/photos/6';
+const I = {
+  shop: '<path d="M5 8h14l-1 12H6L5 8z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
+  food: '<path d="M7 3v8M5 3v4a2 2 0 0 0 4 0V3M7 11v10M17 3c-2 2-2 6 0 8v10"/>',
+  gas: '<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M4 21h12M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/>',
+  hotel: '<path d="M3 20V7M3 14h18v6M21 14v-3a3 3 0 0 0-3-3h-7v6"/><circle cx="7" cy="11" r="1.5"/>',
+  night: '<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
+  safehouse: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M10 21v-6h4v6"/>',
+  services: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  transport: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l1.5-4M16 21l-1.5-4"/>',
+  leisure: '<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/>',
+  home: '<path d="M4 11l8-6 8 6v9H4z"/>',
+  industry: '<path d="M3 21V10l6 4V10l6 4V5h4v16z"/>',
+  other: '<rect x="6" y="3" width="12" height="18" rx="1"/><path d="M10 7h1M13 7h1M10 11h1M13 11h1M10 15h1M13 15h1"/>',
+};
+const CATS = [
+  ['shop', 'Shops', '#FF4FA3'], ['food', 'Food & Drink', '#FF8A3D'], ['gas', 'Gas', '#FFD23F'], ['night', 'Nightlife', '#B44BE0'],
+  ['hotel', 'Hotels', '#4FC3F7'], ['safehouse', 'Safehouses', '#34C759'], ['services', 'Police & Gov', '#5B8CFF'],
+  ['transport', 'Transport', '#00D1B2'], ['leisure', 'Leisure', '#7CF0A0'], ['home', 'Homes', '#C9A27E'],
+  ['industry', 'Industry', '#9AA4B2'], ['other', 'Buildings', '#E6E1F0'],
+];
+const COL = Object.fromEntries(CATS.map(c => [c[0], c[2]])), NAME = Object.fromEntries(CATS.map(c => [c[0], c[1]]));
+const DARK = ['gas', 'other', 'leisure'];
+const svg = (c, s) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${DARK.includes(c) ? '#140a26' : '#fff'}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${I[c]}</svg>`;
+const icon = (c, sel) => L.divIcon({ className: '', iconSize: [26, 26], iconAnchor: [13, 13], html: `<div class="pin${sel ? ' sel' : ''}" style="background:${COL[c]}">${svg(c, 14)}</div>` });
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const haptic = () => { try { tg.HapticFeedback.selectionChanged(); } catch (e) {} };
+
+// ---- map (GTADB coordinate system: 32768 units, 1024 px at zoom 0) ----
+const map = L.map('map', { crs: L.CRS.Simple, minZoom: -1, maxZoom: 7, zoomSnap: .25, zoomControl: false,
+  maxBounds: [[-900, 60], [-60, 940]], maxBoundsViscosity: .8 });
+let tileSet = 'yanis,17';
+L.TileLayer.GTA = L.TileLayer.extend({ getTileUrl: c => `${TILES}/${tileSet}/${c.z}/${c.z},${c.y},${c.x}.jpg` });
+const base = new L.TileLayer.GTA('', { minNativeZoom: 0, maxNativeZoom: 5, tileSize: 256, noWrap: true, keepBuffer: 4, bounds: [[-800, 168], [-168, 832]],
+  attribution: 'Map: <a href="https://map.gtadb.org" target="_blank">GTADB</a> / Yanis v17 · Data: GTA VI Landmarks (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>), filtered' }).addTo(map);
+map.attributionControl.setPrefix(false);
+$('style').onclick = e => { const b = e.target.closest('button'); if (!b || b.dataset.t === tileSet) return; haptic(); tileSet = b.dataset.t;
+  $('style').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); base.redraw(); };
+const HOME = () => map.setView([-500, 600], innerWidth < 600 ? 0.4 : 1.2);
+HOME();
+$('zin').onclick = () => map.zoomIn(); $('zout').onclick = () => map.zoomOut(); $('home').onclick = () => { haptic(); HOME(); };
+const upd = () => { const c = map.getCenter(); $('xy').textContent = `X: ${Math.round(c.lng * 32 - 16384)} · Y: ${Math.round(16384 + c.lat * 32)}`; };
+map.on('move', upd); upd();
+
+const cluster = L.markerClusterGroup({ chunkedLoading: true, showCoverageOnHover: false, disableClusteringAtZoom: 5, spiderfyOnMaxZoom: false,
+  maxClusterRadius: z => z >= 3 ? 45 : 70,
+  iconCreateFunction: cl => { const n = cl.getChildCount(), s = n >= 1000 ? 62 : n >= 100 ? 54 : n >= 20 ? 44 : 36;
+    const bg = n >= 100 ? '#E2364B' : n >= 20 ? '#3DBB6F' : '#5B6BD6';
+    return L.divIcon({ className: '', iconSize: [s, s], html: `<div class="cl" style="width:${s}px;height:${s}px;background:${bg}">${n}</div>` }); } });
+map.addLayer(cluster);
+
+const D = window.LANDMARKS, BY = {};
+D.forEach(d => { BY[d.i] = d; d.m = L.marker([d.lat, d.lng], { icon: icon(d.c) }).on('click', () => open(d)); });
+const state = { cats: new Set(), enter: false };
+let saved = new Set();
+
+function loadSaved(cb) {
+  try { if (tg && tg.CloudStorage && tg.initData) return tg.CloudStorage.getItem('saved', (e, v) => { saved = new Set((v || '').split(',').filter(Boolean)); cb(); }); } catch (e) {}
+  try { saved = new Set((localStorage.getItem('saved') || '').split(',').filter(Boolean)); } catch (e) {}
+  cb();
+}
+function storeSaved() { const v = [...saved].join(','); try { if (tg && tg.CloudStorage && tg.initData) tg.CloudStorage.setItem('saved', v); } catch (e) {} try { localStorage.setItem('saved', v); } catch (e) {} }
+
+const visible = d => (!state.cats.size || state.cats.has(d.c)) && (!state.enter || d.e);
+function refresh() {
+  const v = D.filter(visible); cluster.clearLayers(); cluster.addLayers(v.map(d => d.m));
+  const cnt = {}; D.forEach(d => { if (!state.enter || d.e) cnt[d.c] = (cnt[d.c] || 0) + 1; });
+  $('cats').innerHTML = CATS.filter(c => cnt[c[0]]).map(([k, n, col]) =>
+    `<button class="cat ${state.cats.has(k) ? 'on' : ''}" data-c="${k}"><span class="ico" style="background:${col}">${svg(k, 20)}</span>${n}<span class="n">${cnt[k]}</span></button>`).join('');
+  $('shown').textContent = `${v.length} of ${D.length} shown`;
+  $('pEnter').classList.toggle('on', state.enter); $('enter').classList.toggle('on', state.enter);
+  renderSaved();
+}
+$('cats').onclick = e => { const b = e.target.closest('.cat'); if (!b) return; haptic(); const c = b.dataset.c; state.cats.has(c) ? state.cats.delete(c) : state.cats.add(c); refresh(); };
+$('pAll').onclick = () => { haptic(); state.cats.clear(); state.enter = false; refresh(); };
+$('pEnter').onclick = $('enter').onclick = () => { haptic(); state.enter = !state.enter; refresh(); };
+
+// ---- nav / panels ----
+let panel = '';
+function show(p) {
+  panel = p; ['pCats', 'pSearch', 'pSaved'].forEach(id => $(id).classList.toggle('open', id === p));
+  document.querySelectorAll('.nb').forEach(b => b.classList.toggle('on', b.dataset.p === p));
+  if (p) { closeSheet(); try { tg.BackButton.show(); } catch (e) {} } else if (!cur) try { tg.BackButton.hide(); } catch (e) {}
+  if (p === 'pSearch') setTimeout(() => $('q').focus(), 150);
+}
+$('nav').onclick = e => { const b = e.target.closest('.nb'); if (!b) return; haptic(); show(panel === b.dataset.p ? '' : b.dataset.p); };
+
+const row = d => `<button class="li" data-i="${d.i}"><span class="d" style="background:${COL[d.c]}"></span><span>${esc(d.n)}<small>${esc(d.a || 'Leonida')}</small></span></button>`;
+$('q').addEventListener('input', () => {
+  const s = $('q').value.trim().toLowerCase();
+  if (s.length < 2) { $('results').innerHTML = '<div class="empty">Type at least 2 letters</div>'; return; }
+  const hits = D.filter(d => (d.n + ' ' + d.a + ' ' + d.r).toLowerCase().includes(s)).sort((a, b) => (b.n !== 'Unknown building') - (a.n !== 'Unknown building')).slice(0, 50);
+  $('results').innerHTML = hits.length ? hits.map(row).join('') : '<div class="empty">Nothing found. Try a street or district.</div>';
+});
+function renderSaved() {
+  const n = saved.size; $('savedN').textContent = n ? `${n} place${n > 1 ? 's' : ''}` : '';
+  $('navSaved').style.display = n ? '' : 'none'; $('navSaved').textContent = n;
+  $('savedList').innerHTML = n ? [...saved].filter(i => BY[i]).map(i => row(BY[i])).join('') : '<div class="empty">Tap ★ Save on any place to keep it here</div>';
+}
+['results', 'savedList'].forEach(id => $(id).onclick = e => { const b = e.target.closest('.li'); if (!b) return; $('q').blur(); show(''); focus(BY[b.dataset.i]); });
+
+// ---- place sheet ----
+let cur = null, sel = null, tab = 'ig';
+function photo() {
+  const img = $('sImg'); $('sNone').style.display = 'none'; img.style.display = 'block';
+  img.onerror = () => { img.style.display = 'none'; $('sNone').style.display = 'flex'; };
+  img.src = `${PHOTOS}/${encodeURIComponent(cur.i)},${tab}.jpg`;
+  $('tIg').classList.toggle('on', tab === 'ig'); $('tRl').classList.toggle('on', tab === 'rl'); $('tRl').style.display = cur.r ? '' : 'none';
+}
+function open(d) {
+  show(''); cur = d; tab = 'ig'; haptic();
+  if (sel) sel.setIcon(icon(sel.d.c)); sel = d.m; sel.d = d; d.m.setIcon(icon(d.c, true));
+  $('sKind').innerHTML = `<span style="width:8px;height:8px;border-radius:4px;background:${COL[d.c]}"></span>${NAME[d.c].toUpperCase()}`;
+  $('sTitle').textContent = d.n; $('sArea').textContent = d.a || 'Leonida';
+  $('sBadges').innerHTML = (d.e ? '<span class="badge g">ENTERABLE</span>' : '') + (d.u ? '<span class="badge y">UNCONFIRMED</span>' : '') + `<span class="badge">#${d.i}</span>`;
+  $('sRl').textContent = d.r ? 'Real-life inspiration: ' + d.r : '';
+  $('sSave').querySelector('span').textContent = saved.has(d.i) ? 'Saved' : 'Save';
+  photo(); $('sheet').classList.add('open'); $('nav').style.visibility = 'hidden';
+  try { tg.BackButton.show(); } catch (e) {}
+}
+function closeSheet() {
+  $('sheet').classList.remove('open'); $('nav').style.visibility = '';
+  if (sel) sel.setIcon(icon(sel.d.c)); sel = null; cur = null;
+}
+function focus(d) { cluster.zoomToShowLayer(d.m, () => { map.setView(d.m.getLatLng(), Math.max(map.getZoom(), 5)); open(d); }); }
+$('sX').onclick = () => { closeSheet(); try { tg.BackButton.hide(); } catch (e) {} };
+map.on('click', () => { closeSheet(); show(''); });
+try { tg.BackButton.onClick(() => { if (panel) show(''); else { closeSheet(); tg.BackButton.hide(); } }); } catch (e) {}
+$('tIg').onclick = () => { tab = 'ig'; photo(); }; $('tRl').onclick = () => { tab = 'rl'; photo(); };
+$('sSave').onclick = () => { saved.has(cur.i) ? saved.delete(cur.i) : saved.add(cur.i); storeSaved(); renderSaved(); $('sSave').querySelector('span').textContent = saved.has(cur.i) ? 'Saved' : 'Save'; try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {} };
+$('sShare').onclick = () => {
+  const link = `https://t.me/${BOT}?startapp=${encodeURIComponent(cur.i)}`, text = `${cur.n}, ${cur.a || 'Leonida'} — on the GTA 6 map`;
+  const url = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+  try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
+};
+
+loadSaved(() => {
+  refresh();
+  const start = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || new URLSearchParams(location.search).get('l');
+  if (start && BY[start]) setTimeout(() => focus(BY[start]), 400);
+  const l = $('loading'); l.style.opacity = 0; setTimeout(() => l.remove(), 400);
+});
+</script>
+</body>
+</html>
