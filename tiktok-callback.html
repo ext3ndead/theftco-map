@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Theft &amp; Co — TikTok connected</title>
+<style>
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#fff;
+  background:linear-gradient(180deg,#24123f,#3b1d5c 50%,#7a2f78)}
+.c{max-width:560px;margin:20px;padding:28px;border-radius:22px;background:rgba(20,10,38,.75);border:1px solid rgba(255,255,255,.14)}
+h1{margin:0 0 10px;font-size:22px}p{color:rgba(255,255,255,.8);line-height:1.5}
+code{display:block;word-break:break-all;padding:14px;border-radius:12px;background:rgba(0,0,0,.35);font-size:14px;margin:12px 0}
+button{height:44px;padding:0 18px;border:0;border-radius:12px;background:#FF4FA3;color:#fff;font-weight:800;font-size:15px;cursor:pointer}
+</style></head><body><div class="c">
+<h1 id="h">TikTok authorization</h1>
+<p id="p">Copy this code into <b>D:\n8n\youtube\social\config.json</b> → <b>tiktok.auth_code</b>. It works once and expires in a few minutes.</p>
+<code id="code">—</code>
+<button id="b" type="button">Copy code</button>
+</div>
+<script>
+const q = new URLSearchParams(location.search), code = q.get('code'), err = q.get('error');
+document.getElementById('code').textContent = code || ('No code. ' + (err ? err + ': ' + (q.get('error_description') || '') : ''));
+document.getElementById('b').onclick = () => navigator.clipboard.writeText(code || '').then(() => document.getElementById('b').textContent = 'Copied');
+</script></body></html>
